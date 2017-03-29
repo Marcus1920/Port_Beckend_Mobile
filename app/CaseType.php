@@ -9,4 +9,10 @@ class CaseType extends Eloquent
     protected $table    = 'cases_types';
     protected $fillable = ['name','slug','active'];
 
+
+    public function department()
+    {
+        return $this->hasOne('App\Department');
+    }
+
 }

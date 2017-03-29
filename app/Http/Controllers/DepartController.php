@@ -12,6 +12,8 @@ use App\SubCategory;
 use App\SubSubCategory;
 use App\User;
 use App\UserNew;
+use App\CaseSubType ;
+use App\CaseType ;  
 class DepartController extends Controller
 {
 
@@ -48,7 +50,7 @@ class DepartController extends Controller
 	 
 	 {
 		 
-		 $mobiecategories   =   Category::all() ; 
+		 $mobiecategories   =   CaseType::all() ; 
 		 
 		 return  Response()->json($mobiecategories);
 		 
@@ -59,7 +61,7 @@ class DepartController extends Controller
 	 
 	 {
 		 
-		 $mobieSubCategories   =   SubCategory::all() ; 
+		 $mobieSubCategories   =   CaseSubType::all() ; 
 		 
 		 return  Response()->json($mobieSubCategories);
 		 

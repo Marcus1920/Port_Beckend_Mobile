@@ -14,6 +14,8 @@ use App\CaseReport;
 use App\CaseStatus;
 use App\CaseOwner;
 use App\User;
+use App\CaseSubType ;
+use App\CaseType ;  
 use App\UserRole;
 use App\addressbook;
 use App\CaseEscalator;
@@ -265,16 +267,16 @@ class CasesController extends Controller
 	public function mobilecalendarListPerUser()
     {
 		$api_key  = \Input::get('api_key');
-		
+		  
 		$user  = User::where('api_key','=',$api_key )->first();
-		
      //  $events    = CaseEscalator::select('id','title','start','end','color', 'description' 'department' '' 'investigation_note'  'message' )->where('to','=',$user->id)->get();
         $events = \DB::table('cases_escalations')
-						->join('departments','cases_escalations.department','=','departments.id')
-						->join('categories','cases_escalations.category','=','categories.id')
-						->join('cases_statuses', 'cases_escalations.status', '=', 'cases_statuses.id')
+						->join('departments','cases_escalations.department','=','departments.id') 
+					/*	->join('cases_types','cases_escalations.case_type','=','cases_types.id') */
+					/*	->join('cases_statuses', 'cases_escalations.status', '=', 'cases_statuses.id')*/
 						
-					    ->join('sub_categories', 'cases_escalations.sub_category', '=', 'sub_categories.id')
+	               /*    ->join('cases_sub_types', 'cases_escalations.sub_category', '=', 'cases_sub_types.id') */
+						
                         ->where('to','=',$user->id)
                         ->select(\DB::raw( "
                                     cases_escalations.id,
@@ -284,12 +286,12 @@ class CasesController extends Controller
 									cases_escalations.color,
 									cases_escalations.description,
 									cases_escalations.message,
-									cases_escalations.investigation_note,
-                                    departments.name  as department,
-									cases_statuses.name  as status,
+									cases_escalations.investigation_note
+                                    
 									
-									categories.name as category,
-									sub_categories.name as sub_category
+									
+									
+									
 									")
 									)->get() ;
                                    
@@ -360,61 +362,7 @@ class CasesController extends Controller
         }
     }
 
-    public function pendingReferralCasesList()
-    {
-
- 
-        $userRoleObj = UserRole::find(\Auth::user()->role);
-
-        if ($userRoleObj->name == 'Admin') {
-
-
-            $cases = \DB::table('cases')
-                ->join('cases_statuses', 'cases.status', '=', 'cases_statuses.id')
-                ->join('cases_sources', 'cases.source', '=', 'cases_sources.id')
-                ->where('cases_statuses.name', '=', 'Pending')
-                ->select(
-                    \DB::raw("
-
-                                    cases.id,
-                                    cases.created_at,
-                                    cases.description,
-                                    cases_sources.name as source,
-                                    cases_statuses.name as CaseStatus"
-                    )
-                );
-
-
-        } else {
-
- // its  doent  pick   up  the  first  condition 
-            $cases = \DB::table('cases')
-                ->join('cases_statuses', 'cases.status', '=', 'cases_statuses.id')
-                ->join('cases_sources', 'cases.source', '=', 'cases_sources.id')
-                ->where('cases_statuses.name', '=', 'Pending')
-             //  ->where('cases.agent', '=', \Auth::user()->id)
-                ->select(
-                    \DB::raw("
-
-                                            cases.id,
-                                            cases.created_at,
-                                            cases.description,
-                                            cases_sources.name as source,
-                                            cases_statuses.name as CaseStatus"
-                    )
-                );
-
-
-        }
-
-		
-        return \Datatables::of($cases)
-            ->addColumn('actions', '<a class="btn btn-xs btn-alt" data-toggle="modal" onClick="launchCaseModal({{$id}},1);" data-target=".modalCase">View</a>
-
-                                                   <a class="btn btn-xs btn-alt" data-toggle="modal" href="view-case-poi-associates/{{ $id }}" target="_blank">View POI association chart</a>
-                                                    ')
-            ->make(true);
-    }
+   
     /**
      * Show the form for creating a new resource.
      *
@@ -836,21 +784,6 @@ class CasesController extends Controller
 
     }
 
-    public function list_case_poi($id)
-    {
-
-
-
-        $casePois = \DB::table('cases_poi')->where('case_id','=',$id)
-                        ->join('poi','poi.id','=','cases_poi.poi_id')
-                        ->select(array('poi.id','poi.name','poi.surname'));
-
-        return \Datatables::of($casePois)->addColumn('actions','<a target="_blank" class="btn btn-xs btn-alt" href="edit-poi-user/{{$id}}" >View / Edit</a>
-                                                   <a target="_blank" class="btn btn-xs btn-alt" href="view-poi-associates/{{$id}}" >View / Add Associates</a>
-
-                                        '
-                                )->make(true);
-    }
 			  
 					 public function ak_img_resize($target, $newcopy, $w, $h, $ext)
            { list($w_orig, $h_orig) = getimagesize($target); $scale_ratio = $w_orig / $h_orig; if (($w / $h) > $scale_ratio) { $w = $h * $scale_ratio; } else { $h = $w / $scale_ratio; } $img = ""; $ext = strtolower($ext); if ($ext == "gif"){ $img = imagecreatefromgif($target); } else if($ext =="png"){ $img = imagecreatefrompng($target); } else { $img = imagecreatefromjpeg($target); } $tci = imagecreatetruecolor($w, $h); // imagecopyresampled(dst_img, src_img, dst_x, dst_y, src_x, src_y, dst_w, dst_h, src_w, src_h)
@@ -1959,10 +1892,10 @@ class CasesController extends Controller
 	//	$sub_sub_category     		 = $request['sub_sub_category'];
 		$estimatedDate   			 =  $etimatdate;
 		$estimateTime 					= $etimatime  ;
-		
+
 		$dep_internal = Department::where('name','=',$department_internal)->first();
-		$cat_internal = Category::where('name','=',$category_internal)->first();
-	    $sub_cat_internal = SubCategory::where('name','=',$sub_category)->first();
+		$cat_internal = CaseType::where('name','=',$category_internal)->first();
+	    $sub_cat_internal = CaseSubType::where('name','=',$sub_category)->first();
 		
 	    $dep_id;
 		$cat_id;
@@ -1996,9 +1929,9 @@ class CasesController extends Controller
                
                 $newCase->description           = $description ;
 				$newCase->department			=  $dep_id;
-				$newCase->category				= $cat_id;
-				$newCase->sub_category		    = $sub_cat_id;
-		        $newCase->case_type             = $sub_cat_id;
+				$newCase->case_type				= $cat_id;
+				$newCase->case_sub_type		    = $sub_cat_id;
+		        
                
                 $newCase->due_date              =  $duedate ;
            

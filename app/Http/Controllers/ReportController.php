@@ -149,7 +149,6 @@ categories.name as category, categories.id as category_id,`sub_categories`.name 
     {
 
 
-
         \Log::info("Request ".$request);
 
          \Log::info("Request ".$request);
@@ -279,12 +278,12 @@ categories.name as category, categories.id as category_id,`sub_categories`.name 
                     'caseDesc'  =>$case->description
                 );
 
-                \Mail::send('emails.sms',$data, function($message) use ($userNew) {
+          /**      \Mail::send('emails.sms',$data, function($message) use ($userNew) {
 
                     $message->from('info@Ensky.net', 'Ensky');
                     $message->to($userNew->email)->subject("Ensky Notification - New Case Reported:");
 
-                });
+                });**/
 
 
 
@@ -299,7 +298,7 @@ categories.name as category, categories.id as category_id,`sub_categories`.name 
                     if (sizeof($firstRespondersObj) > 0) {
 
 
-                        $case->status      = 4;
+                        $case->status      = 1;
                         $case->referred_at = \Carbon\Carbon::now('Africa/Johannesburg')->toDateTimeString();
                         $case->save();
 
@@ -325,21 +324,21 @@ categories.name as category, categories.id as category_id,`sub_categories`.name 
                                         'caseReporter' => $case->description,
                                     );
 
-                                \Mail::send('emails.responder',$data, function($message) use ($firstResponderUser) {
+                             /*   \Mail::send('emails.responder',$data, function($message) use ($firstResponderUser) {
 
                                     $message->from('info@redfrogs.net', 'Redfrogs');
                                     $message->to($firstResponderUser->email)->subject("Redfrogs Notification - New Case Reported:");
 
                                 });
-
+*/
                                 $cellphone = $firstResponderUser->email;
 
-                                \Mail::send('emails.caseEscalatedSMS',$data, function($message) use ($cellphone)
+                               /* \Mail::send('emails.caseEscalatedSMS',$data, function($message) use ($cellphone)
                                 {
                                     $message->from('redfrogs.net', 'redfrogs');
                                     $message->to('cooluma@siyaleader.net')->subject("REFER: $cellphone" );
 
-                                });
+                                });*/
 
 
 
@@ -373,7 +372,7 @@ categories.name as category, categories.id as category_id,`sub_categories`.name 
 
                         if (sizeof($firstRespondersObj) > 0) {
 
-                            $case->status = 4;
+                            $case->status = 1;
                             $case->referred_at = \Carbon\Carbon::now('Africa/Johannesburg')->toDateTimeString();
                             $case->save();
 
@@ -399,20 +398,20 @@ categories.name as category, categories.id as category_id,`sub_categories`.name 
                                                 'caseReporter'  =>$case->description,
                                             );
 
-                                        \Mail::send('emails.responder',$data, function($message) use ($firstResponderUser) {
+                                     /*   \Mail::send('emails.responder',$data, function($message) use ($firstResponderUser) {
                                             $message->from('info@ecin.net', 'Ecin');
                                             $message->to($firstResponderUser->email)->subject("Ecin Notification - New Case Reported:");
 
-                                        });
+                                        });*/
 
                                         $cellphone = $firstResponderUser->cellphone;
 
-                                       \Mail::send('emails.caseEscalatedSMS',$data, function($message) use ($cellphone)
+                                    /*   \Mail::send('emails.caseEscalatedSMS',$data, function($message) use ($cellphone)
                                         {
                                             $message->from('info@ecin.net', 'Ecin');
                                             $message->to('cooluma@ecin.net')->subject("REFER: $cellphone" );
 
-                                        });
+                                        });*/
 
                                 }
 
@@ -776,8 +775,8 @@ public   function   updatecasemobile  (){
              {
               $myReports = \DB::table('cases')
 
-               ->join('categories', 'cases.category', '=', 'categories.id')
-                ->join('sub_categories', 'cases.sub_category', '=', 'sub_categories.id')
+               ->join('cases_types', 'cases.case_type', '=', 'cases_types.id')
+                ->join('cases_sub_types', 'cases.case_sub_type', '=', 'cases_sub_types.id')
                 ->join('cases_statuses', 'cases.status', '=', 'cases_statuses.id')
                ->join('departments', 'cases.department', '=', 'departments.id')
               //  ->leftjoin('sub_sub_categories', 'cases.sub_sub_category', '=', 'sub_sub_categories.id')
@@ -789,8 +788,8 @@ public   function   updatecasemobile  (){
         				cases.created_at,
         				cases_statuses.name as status,
         				departments.name as department,
-        				categories.name as category,
-        				sub_categories.name as sub_category,
+        				cases_types.name as category,
+        				cases_sub_types.name as sub_category,
         				cases.description
 			        	"))->get();
                 $response["error"]   = FALSE;
@@ -928,6 +927,238 @@ public   function   updatecasemobile  (){
 
 
 
+    }
+	
+	
+// Function for resizing jpg, gif, or png image files
+
+
+
+ public function saveReportImage()
+    {
+       
+
+         
+
+		  $name            = \Input::get('name');
+		  $email           = \Input::get('email');
+		  $cellphone       = \Input::get('cellphone');
+		  $duedate         = \Input::get('duedate');
+		  $duetime         = \Input::get('duetime');
+		  $etimatdate      = \Input::get('etimatdate');
+		  $etimatime       = \Input::get('etimatime');
+		  $depart          = \Input::get('depart');
+		  $cat             = \Input::get('cat');
+		  $to             = \Input::get('to');
+		  $subcat          = \Input::get('subcat');
+		  $message         = \Input::get('message');
+		  $description     = \Input::get('description');
+		 $headers          = apache_request_headers();
+         $response         = array();
+         $files            = $_FILES['img'];
+         
+		  
+            if (count($_FILES) > 0) {
+
+            $files = $_FILES['img'];
+            $name  = uniqid('img-'.date('Ymd').'-');
+            $temp  = explode(".",$files['name']);
+            $name  = $name . '.'.end($temp);
+
+
+            if (file_exists("uploads/".$name))
+            {
+                echo $_FILES["img"]["name"]."already exists. ";
+            }
+            else
+            {
+
+                $img_url      = "uploads/".$name;
+                $target_file  = "uploads/$name";
+                $resized_file = "uploads/$name";
+                $wmax         = 600;
+                $hmax         = 480;
+                $fileExt      = 'jpg';
+
+                if(move_uploaded_file($_FILES["img"]["tmp_name"],$img_url))
+                {
+
+                     $this->ak_img_resize($target_file, $resized_file, $wmax, $hmax, $fileExt);
+
+                }
+
+            }
+        }
+
+
+       $img_url = isset($img_url)? $img_url : "uploads/noimage.png";
+		 // $idi   = UserNew::select('id')->where('api_key','=',$api_key)->first();
+		  
+         $idi = UserNew::where('api_key','=',$headers['api_key_new'])->first();
+
+          $idi->id  ;
+		 
+		$dueDate					 =  $duedate;
+		
+		$department_internal		 = $depart;
+		$category_internal			 = $cat;
+		$sub_category				 =   $subcat;
+		
+	
+	//	$sub_sub_category     		 = $request['sub_sub_category'];
+		$estimatedDate   			 =  $etimatdate;
+		$estimateTime 					= $etimatime  ;
+		
+		$dep_internal = Department::where('name','=',$department_internal)->first();
+		$cat_internal = Category::where('name','=',$category_internal)->first();
+	    $sub_cat_internal = SubCategory::where('name','=',$sub_category)->first();
+		
+	    $dep_id;
+		$cat_id;
+		$sub_cat_id;
+		
+		if($dep_internal == null){
+			$dep_id = 0;
+		}else{
+			$dep_id = $dep_internal->id;
+		}
+		
+		if($cat_internal == null){
+			$cat_id = 0;
+		}else{
+			$cat_id = $cat_internal->id;
+		}
+		
+		if($sub_cat_internal == null){
+			$sub_cat_id = 0;
+		}else{
+			$sub_cat_id = $sub_cat_internal->id;
+		}
+		// $sub_cat = \DB::table('sub_categories')->where('name','=',$sub_category)->first();
+            
+		//$sub_sub_cat = Department::where('name','=',$sub_sub_category)->first();
+		 
+                $newCase                        = New CaseReport();
+                $newCase->created_at            = \Carbon\Carbon::now('Africa/Johannesburg')->toDateTimeString();
+                $newCase->user                  = $idi->id;
+                $newCase->reporter              = $idi->id;
+                $newCase->img_url               = $img_url;
+                $newCase->description           = $description ;
+				$newCase->department			=  $dep_id;
+				$newCase->category				= $cat_id;
+				$newCase->sub_category		    = $sub_cat_id;
+		        $newCase->case_type             = $sub_cat_id;
+               
+                $newCase->due_date              =  $duedate ;
+           
+                $newCase->investigation_officer =  $name ;
+                $newCase->investigation_cell    =  $cellphone ;
+                $newCase->investigation_email   =  $email; 
+                $newCase->investigation_note    =  $message ;
+  
+                $newCase->status          = 4;
+                $newCase->addressbook     = 0;
+                $newCase->source          = 2; //Mobile
+                $newCase->active          = 1;
+               
+                $newCase->save();
+				
+				
+				
+					/*-------------------------------------------------------------*/
+				$caseEscalationObj          = New CaseEscalator();
+				$caseEscalationObj->case_id =$newCase->id;
+				$caseEscalationObj->from    = $idi->id;
+				$caseEscalationObj->to      = $to; 
+				//$caseEscalationObj->type    = $type;
+				$caseEscalationObj->message =$message;
+				$caseEscalationObj->due_date = $dueDate ;
+				$caseEscalationObj->title    = "Case ID: " .$newCase->id;
+				$caseEscalationObj->start    = date("Y-m-d");
+				$caseEscalationObj->end      = $dueDate;
+				$caseEscalationObj->color    = "#4caf50";
+			
+				
+			
+				
+			    $caseEscalationObj->created_at              = \Carbon\Carbon::now('Africa/Johannesburg')->toDateTimeString();
+                $caseEscalationObj->user                    = $idi->id;
+                $caseEscalationObj->reporter                = $idi->id;
+               
+                $caseEscalationObj->description             = $description ;
+				$caseEscalationObj->department		        =  $dep_id;
+				$caseEscalationObj->category				= $cat_id;
+				$caseEscalationObj->sub_category		    = $sub_cat_id;
+		        $caseEscalationObj->case_type               = $sub_cat_id;
+               
+                $caseEscalationObj->due_date                 =  $duedate ;
+           
+                $caseEscalationObj->investigation_officer    =  $name ;
+                $caseEscalationObj->investigation_cell    =  $cellphone ;
+                $caseEscalationObj->investigation_email   =  $email; 
+                $caseEscalationObj->investigation_note    =  $message ;
+  
+                $caseEscalationObj->status          = 4;
+                $caseEscalationObj->addressbook     = 0;
+                $caseEscalationObj->source          = 2; //Mobile
+                $caseEscalationObj->active          = 1;
+				
+			    $caseEscalationObj->save();
+				/*-------------------------------------------------------------*/
+				
+				
+				
+						
+	   $Messagenotifications  = new  Messagenotifications() ; 
+	   $Messagenotifications->from             =$idi->id;
+	   $Messagenotifications->to               =  $to ; 
+	   $Messagenotifications->message          = $message ;
+	   $Messagenotifications->case_id          =  $newCase->id;
+	   $Messagenotifications->title          =  $newCase->id;
+	   $Messagenotifications->case_escalator_id=$newCase->id;
+	   $Messagenotifications-> save() ;
+				
+		//		$caseId			= CaseReport::where('description','=',$description)->first();
+			
+			
+			    $caseOwner              = new CaseOwner();
+                $caseOwner->user        = $idi->id;
+                $caseOwner->case_id     = $newCase->id;
+                $caseOwner->type        = 0;
+                $caseOwner->active      = 1;
+                $caseOwner->save();
+
+
+                $destinationFolder = 'files/case_'.$newCase->id;
+
+                if(!\File::exists($destinationFolder)) {
+                     $createDir         = \File::makeDirectory($destinationFolder,0777,true);
+                }
+
+
+
+
+                $response["message"]      = "Case created successfully";
+                $response["error"]        = FALSE;
+                $response["caseID"]       = $newCase->id;
+
+                return \Response::json($response,201);
+		
+		
+		
+		
+		
+		
+		
+         if (isset($headers['api_key'])) {
+
+             $$user  = User::where('api_key','=',$headers['api_key'])->first();
+
+            
+           
+
+        }
+       
     }
 
     /**

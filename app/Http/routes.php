@@ -29,9 +29,9 @@ Route::get('/', function () {
 
 
 
-        Route::get('categoriess', 'DepartController@index');
+    Route::get('categoriess', 'DepartController@index');
     Route::get('myreport', 'ReportCController@myReport');
-    Route::post('report', 'ReportsController@store');
+    Route::post('report', 'ReportController@store');
 
     Route::get('messagenofication','CaseNotesController@messagenofication');
     Route::post('mobilecaeCreate','CasesController@mobilecaeCreate');
@@ -70,7 +70,7 @@ Route::get('/', function () {
 
 
     Route::get('mobilecalendarListPerUser', 'CasesController@mobilecalendarListPerUser');
-    Route::post('reportImage','ReportCController@saveReportImage');
+    Route::post('reportImage','ReportController@saveReportImage');
     Route::post('createincident','ReportCController@creatReport');
 
     Route::post('closeIncidentmobile', 'ReportCController@closeIncidentmobile');
